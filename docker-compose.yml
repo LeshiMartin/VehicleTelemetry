@@ -1,0 +1,56 @@
+services:
+    vehicle-api-migrations:
+        build: 
+            context: .
+            dockerfile: Vehicle-Api/Migrations/Bundle/Dockerfile
+        environment:
+            ConnectionStrings__Default: "Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        restart: "no"
+
+    vehicle-api:
+        build:
+            context: .
+            dockerfile: Vehicle-Api/Dockerfile
+        ports:
+            - "8080:8080"
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            ConnectionStrings__Default: "Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
+        depends_on:
+            vehicle-api-migrations:
+                condition: service_completed_successfully
+        develop:
+            watch:
+                - action: sync
+                  path: ./Vehicle-Api
+                  target: /src/Vehicle-Api
+                - action: sync
+                  path: ./Common
+                  target: /src/Common
+                - action: rebuild
+                  path: ./Vehicle-Api/Vehicle-Api.csproj
+                - action: rebuild
+                  path: ./Common/Common.csproj
+
+    postgres:
+        image: postgres:18
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        ports:
+            - "5433:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
+
+volumes:
+    postgres_data:

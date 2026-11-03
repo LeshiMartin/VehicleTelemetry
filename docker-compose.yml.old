@@ -1,0 +1,12 @@
+services:
+    vehicle-api:
+        build:
+            context: ./Vehicle-Api
+            dockerfile: Dockerfile
+        ports:
+            - "8080:8080"
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            ConnectionStrings__Default: "Server=host.docker.internal;Database=VehicleDb;User Id=postgres;Password=Mobilen1!;"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"

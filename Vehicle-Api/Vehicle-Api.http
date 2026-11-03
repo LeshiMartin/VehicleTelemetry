@@ -1,0 +1,24 @@
+@Vehicle_Api_HostAddress = http://localhost:5021
+
+GET {{Vehicle_Api_HostAddress}}/Vehicle?LastId=6&Count=15
+Accept: application/json
+
+###
+GET {{Vehicle_Api_HostAddress}}/Vehicle/10
+Accept: application/json
+
+
+###
+POST {{Vehicle_Api_HostAddress}}/Vehicle
+Content-Type: application/json
+{
+  "name": "Test Vehicle_5",
+  "vin": "TESTVIN1234567890",
+  "make": "Test Make",
+  "model": "Test Model",
+  "year": 2020,
+  "vehicleEngineType": 1,
+  "vehicleState":1
+}
+
+###

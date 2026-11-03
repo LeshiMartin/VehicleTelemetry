@@ -1,0 +1,139 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+
+jobs:
+    detect-changes:
+        name: Detect changed projects
+        runs-on: ubuntu-latest
+
+        outputs:
+            vehicle-api: ${{ steps.filter.outputs.vehicle-api }}
+            anomaly-detector: ${{ steps.filter.outputs.anomaly-detector }}
+            notification-api: ${{ steps.filter.outputs.notification-api }}
+            common: ${{ steps.filter.outputs.common }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            
+            - name: Detect changes
+              uses: dorny/paths-filter@v4
+              id: filter
+              with:
+                filters: |
+                    vehicle-api:
+                        - 'Vehicle-Api/**'
+                        - 'Common/**'
+                        - '.github/workflows/ci.yml'
+                        
+                    anomaly-detector:
+                        - 'Anomaly-Detector/**'
+                        - 'Common/**'
+                        - '.github/workflows/ci.yml'
+
+                    notification-api:
+                        - 'Notification-Api/**'
+                        - 'Common/**'
+                        - '.github/workflows/ci.yml'
+
+                    common:
+                        - 'Common/**'
+
+    vehicle-api:
+        name: Vehicle Api
+        needs: detect-changes
+        if: needs.detect-changes.outputs.vehicle-api == 'true'
+
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: action/checkout@v4
+
+            - name: Setup .NET
+              uses: action/setup-dotnet@v4
+              with:
+                dothet-version: 10.0.x
+
+            - name: Restore
+              run: dotnet restore ./Vehicle-Api/Vehicle-Api.csproj
+              
+            - name: Build
+              run: dotnet build ./Vehicle-Api/Vehicle-Api.csproj --no-restore --configuration Release
+              
+            - name: Test
+              run: dotnet test ./Vehicle-Api-Tests/Vehicle-Api-Tests.csproj --no-build --configuration Release
+              
+            - name: Setup docker BuildX
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build API image
+              uses: docker/build-push=action@v6
+              with:
+                context: .
+                file: Vehicle-Api/Dockerfile
+                push: false
+                tags: vehicletelemetry-api:ci-${{ github.run_id }}
+
+            - name: Build migrations image
+              uses: docker/build-push=action@v6
+              with:
+                context: .
+                file: Vehicle-Api/Migrations/Bundle/Dockerfile
+                push: false
+                tags: vehicletelemetry-migrations:ci-${{ github.run_id }}
+
+    anomaly-detector:
+        name: Anomaly Detector
+        needs: detect-changes
+        if: needs.detect-changes.outputs.anomaly-detector == 'true'
+
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Setup .NET
+            uses: actions/setup-dotnet@v4
+            with:
+              dotnet-version: 10.0.x
+
+          - name: Restore
+            run: dotnet restore ./Anomaly-Detector/Anomaly-Detector.csproj
+
+          - name: Build
+            run: dotnet build ./Anomaly-Detector/Anomaly-Detector.csproj --no-restore --configuration Release
+
+          - name: Test
+            run: dotnet test ./tests/Anomaly-Detector.Tests/Anomaly-Detector.Tests.csproj --no-build --configuration Release
+
+    notification-api:
+      name: Notification API
+      needs: detect-changes
+      if: needs.detect-changes.outputs.notification-api == 'true'
+
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: 10.0.x
+
+        - name: Restore
+          run: dotnet restore ./Notification-Api/Notification-Api.csproj
+
+        - name: Build
+          run: dotnet build ./Notification-Api/Notification-Api.csproj --no-restore --configuration Release
+
+        - name: Test
+          run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release

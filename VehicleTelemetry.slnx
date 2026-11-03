@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yml" />
+  </Folder>
+  <Folder Name="/VehicleApi/">
+    <Project Path="Vehicle-Api-Tests/Vehicle-Api-Tests.csproj" />
+    <Project Path="Vehicle-Api/Vehicle-Api.csproj" />
+  </Folder>
+  <Project Path="Anomaly-Detector/Anomaly-Detector.csproj" />
+  <Project Path="Common/Common.csproj" />
+  <Project Path="Notification-Api/Notification-Api.csproj" />
+  <Project Path="Signal-Simulator/Signal-Simulator.csproj" />
+  <Project Path="Telemetry-Ingest-Api/Telemetry-Ingest-Api.csproj" />
+  <Project Path="Telemetry-Processor/Telemetry-Processor.csproj" />
+</Solution>
