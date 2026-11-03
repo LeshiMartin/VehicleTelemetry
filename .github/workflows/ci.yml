@@ -28,7 +28,7 @@ on:
 jobs:
     detect-changes:
         name: Detect changed projects
-        runs-on: ubuntu-26
+        runs-on: ubuntu-26.04
 
         outputs:
             vehicle-api: ${{ steps.filter.outputs.vehicle-api }}
@@ -68,7 +68,7 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.vehicle-api == 'true'
 
-        runs-on: ubuntu-26
+        runs-on: ubuntu-26.04
 
         steps:
             - name: Checkout
@@ -118,7 +118,7 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.anomaly-detector == 'true'
 
-        runs-on: ubuntu-26
+        runs-on: ubuntu-26.04
 
         steps:
           - name: Checkout
@@ -143,7 +143,7 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.notification-api == 'true'
 
-        runs-on: ubuntu-26
+        runs-on: ubuntu-26.04
 
         steps:
           - name: Checkout
