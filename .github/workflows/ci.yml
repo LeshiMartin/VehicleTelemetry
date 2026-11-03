@@ -28,7 +28,7 @@ on:
 jobs:
     detect-changes:
         name: Detect changed projects
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26
 
         outputs:
             vehicle-api: ${{ steps.filter.outputs.vehicle-api }}
@@ -38,7 +38,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
             
             - name: Detect changes
               uses: dorny/paths-filter@v4
@@ -68,11 +68,11 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.vehicle-api == 'true'
 
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup .NET
               uses: actions/setup-dotnet@v4
@@ -118,11 +118,11 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.anomaly-detector == 'true'
 
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26
 
         steps:
           - name: Checkout
-            uses: actions/checkout@v4
+            uses: actions/checkout@v5
 
           - name: Setup .NET
             uses: actions/setup-dotnet@v4
@@ -143,22 +143,22 @@ jobs:
         needs: detect-changes
         if: needs.detect-changes.outputs.notification-api == 'true'
 
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26
 
         steps:
           - name: Checkout
-            uses: actions/checkout@v4
-        
+            uses: actions/checkout@v5
+
           - name: Setup .NET
             uses: actions/setup-dotnet@v4
             with:
               dotnet-version: 10.0.x
-            
+
           - name: Restore
             run: dotnet restore ./Notification-Api/Notification-Api.csproj
-            
+
           - name: Build
             run: dotnet build ./Notification-Api/Notification-Api.csproj --no-restore --configuration Release
-            
+
           # - name: Test
           #   run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release
