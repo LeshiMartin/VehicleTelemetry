@@ -4,7 +4,26 @@ on:
     push:
         branches:
             - main
+        paths:
+            - "Vehicle-Api/**"
+            - "Vehicle-Api-Tests/**"
+            - "Anomaly-Detector/**"
+            - "Notification-Api/**"
+            - "Common/**"
+            - "*.sln"
+            - ".github/workflows/ci.yml"
+       
     pull_request:
+        branches: 
+            - main
+        paths:
+            - "Vehicle-Api/**"
+            - "Vehicle-Api-Tests/**"
+            - "Anomaly-Detector/**"
+            - "Notification-Api/**"
+            - "Common/**"
+            - "*.sln"
+            - ".github/workflows/ci.yml"
 
 jobs:
     detect-changes:
@@ -65,6 +84,12 @@ jobs:
               
             - name: Build
               run: dotnet build ./Vehicle-Api/Vehicle-Api.csproj --no-restore --configuration Release
+            
+            - name: Restore
+              run: dotnet restore ./Vehicle-Api-Tests/Vehicle-Api-Tests.csproj
+              
+            - name: Build
+              run: dotnet build ./Vehicle-Api-Tests/Vehicle-Api-Tests.csproj --no-restore --configuration Release
               
             - name: Test
               run: dotnet test ./Vehicle-Api-Tests/Vehicle-Api-Tests.csproj --no-build --configuration Release
@@ -114,26 +139,26 @@ jobs:
           #   run: dotnet test ./tests/Anomaly-Detector.Tests/Anomaly-Detector.Tests.csproj --no-build --configuration Release
 
     notification-api:
-      name: Notification API
-      needs: detect-changes
-      if: needs.detect-changes.outputs.notification-api == 'true'
+        name: Notification API
+        needs: detect-changes
+        if: needs.detect-changes.outputs.notification-api == 'true'
 
-      runs-on: ubuntu-latest
+        runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-
-        - name: Setup .NET
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: 10.0.x
-
-        - name: Restore
-          run: dotnet restore ./Notification-Api/Notification-Api.csproj
-
-        - name: Build
-          run: dotnet build ./Notification-Api/Notification-Api.csproj --no-restore --configuration Release
-
-        # - name: Test
-        #   run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+        
+          - name: Setup .NET
+            uses: actions/setup-dotnet@v4
+            with:
+              dotnet-version: 10.0.x
+            
+          - name: Restore
+            run: dotnet restore ./Notification-Api/Notification-Api.csproj
+            
+          - name: Build
+            run: dotnet build ./Notification-Api/Notification-Api.csproj --no-restore --configuration Release
+            
+          # - name: Test
+          #   run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release
