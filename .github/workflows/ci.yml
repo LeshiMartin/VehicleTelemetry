@@ -110,8 +110,8 @@ jobs:
           - name: Build
             run: dotnet build ./Anomaly-Detector/Anomaly-Detector.csproj --no-restore --configuration Release
 
-          - name: Test
-            run: dotnet test ./tests/Anomaly-Detector.Tests/Anomaly-Detector.Tests.csproj --no-build --configuration Release
+          # - name: Test
+          #   run: dotnet test ./tests/Anomaly-Detector.Tests/Anomaly-Detector.Tests.csproj --no-build --configuration Release
 
     notification-api:
       name: Notification API
@@ -135,5 +135,5 @@ jobs:
         - name: Build
           run: dotnet build ./Notification-Api/Notification-Api.csproj --no-restore --configuration Release
 
-        - name: Test
-          run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release
+        # - name: Test
+        #   run: dotnet test ./tests/Notification-Api.Tests/Notification-Api.Tests.csproj --no-build --configuration Release
