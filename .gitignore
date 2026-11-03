@@ -58,4 +58,6 @@ nunit-*.xml
 *.sln.*.user
 .vs
 .vscode
+.env
 EfBundle
+EFBundle

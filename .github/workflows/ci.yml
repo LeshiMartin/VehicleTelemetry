@@ -80,7 +80,7 @@ jobs:
                 push: false
                 tags: vehicletelemetry-api:ci-${{ github.run_id }}
 
-            - name: Build migrations image
+            - name: Build migration bundle image
               uses: docker/build-push-action@v6
               with:
                 context: .
