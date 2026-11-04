@@ -1,6 +1,7 @@
 ﻿using Common;
 using Common.Sorting;
 using Microsoft.EntityFrameworkCore;
+using Vehicle_Api.Middleware;
 
 namespace Vehicle_Api.Features.VehicleFeature;
 

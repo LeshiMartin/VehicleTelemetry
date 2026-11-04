@@ -1,7 +1,7 @@
 ﻿using Common;
 using Common.Sorting;
 
-namespace Vehicle_Api;
+namespace Vehicle_Api.Middleware;
 
 public static class Extensions
 {

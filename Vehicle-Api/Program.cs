@@ -1,24 +1,38 @@
-using System.Text;
 using Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
+using System.Text.Json;
 using Vehicle_Api;
 using Vehicle_Api.Features.SignalThresholdFeature;
 using Vehicle_Api.Features.VehicleFeature;
 using Vehicle_Api.Features.VehicleSignalFeature;
+using Vehicle_Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(opt =>
+{
+    opt.AddOperationTransformer<BearerSecurityOperationSchemeTransformer>();
+    opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+});
 builder.Services.AddDbContext<VehicleDbContext>(x =>
         x.UseNpgsql(
             Environment.GetEnvironmentVariable("ConnectionStrings__Default")??
             builder.Configuration.GetConnectionString("Default") ??
             "Host=design-time-placeholder;Database=design-time-placeholder;Username=design-time-placeholder;Password=design-time-placeholder"
         ));
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self",() => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddDbContextCheck<VehicleDbContext>();
+
 var config = builder.Configuration;
 var authenticationData = GetAuthenticationData(config);
 builder.Services.AddOptions<AuthenticationData>().Configure(x =>
@@ -67,12 +81,26 @@ using (var scope = app.Services.CreateScope())
     foreach (var routeRegister in routeRegisters)
         routeRegister.RegisterRoutes(app);
 }
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+}).ExcludeFromDescription();
 
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthCheckResponseWriter.WriteJson
+}).ExcludeFromDescription();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
     app.MapOpenApi();
+    app.MapScalarApiReference(x=>
+    {
+        x.Theme = ScalarTheme.Kepler;
+        x.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.RestSharp);
+    });
 }
 
 app.Run();
@@ -100,4 +128,35 @@ AuthenticationData GetAuthenticationData(IConfiguration configuration)
         Issuer = issuer,
         SigningKey = signingKey
     };
+}
+
+public static class HealthCheckResponseWriter
+{
+    public static Task WriteJson(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json; charset=utf-8";
+
+        var response = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration,
+            checks = report.Entries.Select(entry => new
+            {
+                name = entry.Key,
+                status = entry.Value.Status.ToString(),
+                description = entry.Value.Description,
+                duration = entry.Value.Duration,
+                exception = entry.Value.Exception?.Message,
+                data = entry.Value.Data.Count == 0
+                    ? null
+                    : entry.Value.Data
+            })
+        };
+
+        return context.Response.WriteAsync(
+            JsonSerializer.Serialize(response, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+    }
 }
