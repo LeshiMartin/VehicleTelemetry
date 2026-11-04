@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
@@ -14,6 +15,9 @@ namespace Vehicle_Api_Tests;
 
 public sealed class VehicleApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    public const string TestIssuer = "https://test.local/auth";
+    public const string TestAudience = "vehicle-api-tests";
+    private const string TestSigningKeyBase64 = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
     private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder("postgres:18").Build();
     public async Task InitializeAsync()
     {
@@ -27,6 +31,15 @@ public sealed class VehicleApiFactory : WebApplicationFactory<Program>, IAsyncLi
     {
         builder.UseEnvironment("Development");
 
+        builder.ConfigureAppConfiguration((_, conf) =>
+        {
+            conf.AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                ["Jwt:Issuer"]= TestIssuer,
+                ["Jwt:Audience"] = TestAudience,
+                ["Jwt:SigningKey"] = TestSigningKeyBase64
+            }!);
+        });
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<VehicleDbContext>>();
