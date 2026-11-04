@@ -30,16 +30,10 @@ public sealed class VehicleApiFactory : WebApplicationFactory<Program>, IAsyncLi
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-
-        builder.ConfigureAppConfiguration((_, conf) =>
-        {
-            conf.AddInMemoryCollection(new Dictionary<string, string>()
-            {
-                ["Jwt:Issuer"]= TestIssuer,
-                ["Jwt:Audience"] = TestAudience,
-                ["Jwt:SigningKey"] = TestSigningKeyBase64
-            }!);
-        });
+        builder.UseSetting("Jwt:Issuer", TestIssuer);
+        builder.UseSetting("Jwt:Audience", TestAudience);
+        builder.UseSetting("Jwt:SigningKey", TestSigningKeyBase64);
+        builder.UseSetting("Authentication:Schemes:Bearer:SigningKeys:0:Value", TestSigningKeyBase64);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<VehicleDbContext>>();
