@@ -16,9 +16,14 @@ services:
             dockerfile: Vehicle-Api/Dockerfile
         ports:
             - "8080:8080"
+            - "8081:8081"
         environment:
             ASPNETCORE_ENVIRONMENT: Development
             ConnectionStrings__Default: "Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};"
+            JWT__ISSUER: "${JWT_ISSUER}"
+            JWT__AUDIENCE: "${JWT_AUDIENCE}"
+            JWT__SIGNINGKEY: "${JWT_SIGNING_KEY}"
+            IN_CONTAINER: "true"
         depends_on:
             vehicle-api-migrations:
                 condition: service_completed_successfully

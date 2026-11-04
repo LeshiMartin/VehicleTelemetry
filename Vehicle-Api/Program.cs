@@ -1,4 +1,8 @@
+using System.Text;
+using Common;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Vehicle_Api;
 using Vehicle_Api.Features.SignalThresholdFeature;
 using Vehicle_Api.Features.VehicleFeature;
@@ -9,7 +13,39 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddDbContext<VehicleDbContext>(x => x.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddDbContext<VehicleDbContext>(x =>
+        x.UseNpgsql(
+            Environment.GetEnvironmentVariable("ConnectionStrings__Default")??
+            builder.Configuration.GetConnectionString("Default") ??
+            "Host=design-time-placeholder;Database=design-time-placeholder;Username=design-time-placeholder;Password=design-time-placeholder"
+        ));
+var config = builder.Configuration;
+var authenticationData = GetAuthenticationData(config);
+builder.Services.AddOptions<AuthenticationData>().Configure(x =>
+{
+    x.Issuer = authenticationData.Issuer;
+    x.Audience = authenticationData.Audience;
+    x.SigningKey = authenticationData.SigningKey;
+});
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opt =>
+    {
+        opt.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidIssuer = authenticationData.Issuer,
+
+            ValidateAudience = true,
+            ValidAudience = authenticationData.Audience,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(authenticationData.SigningKey),
+            ValidateLifetime = true,
+            RequireExpirationTime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddValidation();
 builder.Services.AddScoped<IRouteRegister, VehicleApi>();
 builder.Services.AddScoped<IRouteRegister, VehicleSignalApi>();
@@ -22,6 +58,8 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseMiddleware<LoggingMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
@@ -33,8 +71,33 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseHttpsRedirection();
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.Run();
+
+
+AuthenticationData GetAuthenticationData(IConfiguration configuration)
+{
+    var (issuer, audience) = (configuration["Jwt:Issuer"], configuration["Jwt:Audience"]);
+    var authenticationSchemeKey = configuration["Authentication:Schemes:Bearer:SigningKeys:0:Value"];
+    var jwtKey = configuration["Jwt:SigningKey"];
+    var isInContainer = Environment.GetEnvironmentVariable("IN_CONTAINER") == "true";
+    if (string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience) ||
+        (string.IsNullOrEmpty(authenticationSchemeKey) && string.IsNullOrEmpty(jwtKey)))
+        throw new InvalidOperationException("The jwt authentication data could not be parse");
+
+    var signingKey =
+        authenticationSchemeKey is not null
+            ? Convert.FromBase64String(authenticationSchemeKey)
+            : isInContainer 
+                ? Convert.FromBase64String(jwtKey!) 
+                : Encoding.UTF8.GetBytes(jwtKey!);
+    return new AuthenticationData()
+    {
+        Audience = audience,
+        Issuer = issuer,
+        SigningKey = signingKey
+    };
+}

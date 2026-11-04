@@ -46,7 +46,7 @@ public class VehicleApi(ILogger<VehicleApi> logger) : IRouteRegister
             }
 
             return Results.Ok(new PageResponseDto<VehicleDto>(results.ToList(), lastId, totalCount));
-        });
+        }).RequireAuthorization(p=>p.RequireRole("Admin" ,"FleetManager"));
 
         group.MapGet("{id:int}", async (int id, VehicleDbContext vehicleDbContext, CancellationToken cancellationToken) =>
         {
@@ -76,8 +76,8 @@ public class VehicleApi(ILogger<VehicleApi> logger) : IRouteRegister
                 vehicle.Make, vehicle.Model,
                 vehicle.Year,
                 vehicle.VehicleState,
-                Enum.GetName<VehicleEngineType>(vehicle.VehicleEngineType)??"")) : Results.NotFound();
-        }).WithName("SingleVehicle");
+                Enum.GetName(vehicle.VehicleEngineType)??"")) : Results.NotFound();
+        }).WithName("SingleVehicle").RequireAuthorization(p => p.RequireRole("Admin", "FleetManager"));
 
         group.MapPost("", async (VehicleDbContext vehicleDbContext, CreateVehicleDto createVehicleDto, CancellationToken cancellationToken) =>
         {
@@ -104,7 +104,7 @@ public class VehicleApi(ILogger<VehicleApi> logger) : IRouteRegister
             logger.LogTrace("Successfully created a vehicle:{vehicle}", vehicle);
             return Results.CreatedAtRoute("SingleVehicle", new { id = vehicle.Id }, vehicle.Id);
 
-        });
+        }).RequireAuthorization(p => p.RequireRole("Admin", "FleetManager"));
 
         return endpointRouteBuilder;
     }
