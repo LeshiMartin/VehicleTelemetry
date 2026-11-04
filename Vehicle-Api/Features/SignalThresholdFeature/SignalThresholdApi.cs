@@ -26,6 +26,7 @@ public class SignalThresholdApi(ILogger<SignalThresholdApi> logger) : IRouteRegi
                 .GetSorter(SignalThresholdSortingExpression)
                 .ApplySort(query)
                 .Where(x => x.VehicleSignalId == signalId && x.Id > pageRequestDto.LastId)
+                .Take(pageRequestDto.Count)
                 .AsAsyncEnumerable();
 
             var result = new List<SignalThresholdDto>(pageRequestDto.Count);

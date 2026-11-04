@@ -1,1 +1,1 @@
-﻿global using static Vehicle_Api.SortingExpressions;
+﻿global using static Vehicle_Api.Middleware.SortingExpressions;

@@ -7,7 +7,7 @@ public static class Extensions
 {
     extension<T>(Sorter<T> sorter) where T: BaseEntity
     {
-        public  IOrderedQueryable<T> ApplySort(IQueryable<T> query)
+        public IOrderedQueryable<T> ApplySort(IQueryable<T> query)
         {
             IOrderedQueryable<T>? orderedQueryable = null;
             foreach (var sortField in sorter)
@@ -26,5 +26,22 @@ public static class Extensions
                 ? query.ThenBy(sortField.SortingExpression)
                 : query.ThenByDescending(sortField.SortingExpression);
 
+    }
+
+    extension(PageRequestDto pageRequestDto)
+    {
+        public IQueryable<T> ApplyPagingTo<T>(IQueryable<T> query) where T : BaseEntity 
+            => query.Where(x => x.Id > pageRequestDto.LastId).Take(pageRequestDto.Count);
+    }
+
+    extension<T>(IQueryable<T> query) where T: BaseEntity
+    {
+        public IOrderedQueryable<T> Sort(Sorter<T> sorter)
+            => sorter.ApplySort(query);
+        public IOrderedQueryable<T> Sort(PageRequestDto dto, SortingExpression<T> sortingExpression)
+        {
+            var sorter = dto.GetSorter(sortingExpression);
+            return query.Sort(sorter);
+        }
     }
 }

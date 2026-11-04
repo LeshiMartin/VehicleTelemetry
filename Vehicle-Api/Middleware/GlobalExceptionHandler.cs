@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Vehicle_Api;
+namespace Vehicle_Api.Middleware;
 
 public class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,

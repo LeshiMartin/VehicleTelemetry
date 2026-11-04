@@ -22,7 +22,7 @@ public static class SortFactory
 
     extension(PageRequestDto dto)
     {
-        public Sorter<T> GetSorter<T>(Dictionary<string, Expression<Func<T, object>>> sortingExpressions) where T : BaseEntity
+        public Sorter<T> GetSorter<T>(SortingExpression<T> sortingExpressions) where T : BaseEntity
         {
             var requests = ParseSort(dto.Sorts);
             if (requests.Count == 0)
@@ -47,4 +47,17 @@ public class Sorter<T>(IReadOnlyList<SortField<T>> sortingField) : IReadOnlyList
     public int Count => sortingField.Count;
 
     public SortField<T> this[int index] => sortingField[index];
+}
+
+public class SortingExpression<T> : Dictionary<string, Expression<Func<T, object>>>
+{
+    public SortingExpression():this(StringComparer.InvariantCultureIgnoreCase)
+    {
+        
+    }
+
+    public SortingExpression(IEqualityComparer<string> equalityComparer):base(equalityComparer)
+    {
+        
+    }
 }

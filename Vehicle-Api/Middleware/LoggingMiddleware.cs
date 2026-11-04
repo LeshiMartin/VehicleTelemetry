@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Vehicle_Api;
+namespace Vehicle_Api.Middleware;
 
 public class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IMiddleware
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Vehicle_Api;
+namespace Vehicle_Api.Middleware;
 
 public class BadHttpRequestExceptionHandler(
     IProblemDetailsService problemDetailsService,

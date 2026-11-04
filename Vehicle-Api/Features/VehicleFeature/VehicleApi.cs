@@ -17,10 +17,9 @@ public class VehicleApi(ILogger<VehicleApi> logger) : IRouteRegister
         {
             logger.LogTrace("Querying Vehicles request:{request}", pageRequestDto);
             var vehiclesQuery = vehicleDbContext.Vehicles.AsNoTracking();
-            var vehicles = vehiclesQuery.Where(x => x.Id > pageRequestDto.LastId).Take(pageRequestDto.Count);
+            var vehicles = pageRequestDto.ApplyPagingTo(vehiclesQuery).Sort(pageRequestDto, VehicleSortingExpressions);
             var totalCount = vehiclesQuery.Count();
-            var list = pageRequestDto.GetSorter(VehicleSortingExpressions)
-                .ApplySort(vehicles)
+            var list = vehicles
                 .Select(x => new
                 {
                     x.Id,
